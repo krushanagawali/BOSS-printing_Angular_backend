@@ -195,7 +195,7 @@ pub async fn reset_password(
 }
 
 
--------------------------------------for VULTR server-----------------------------------------
+//for vultr server 
 
 // // --- ULTIMATE GHOST BYPASS HANDLER ---
 // pub async fn force_download(axum::extract::Path(file_id): axum::extract::Path<String>) -> axum::response::Response {
@@ -271,7 +271,8 @@ pub async fn reset_password(
 
 //     axum::serve(listener, app).await.unwrap();
 // }
--------------------------------------for VULTR server-----------------------------------------
+
+//for vultr server
 
 // --- ULTIMATE GHOST BYPASS HANDLER ---
 pub async fn force_download(axum::extract::Path(file_id): axum::extract::Path<String>) -> axum::response::Response {
@@ -311,8 +312,8 @@ async fn main() {
 
     println!("Database connected successfully");
 
-    -------------------render database--------------------
-
+//render database
+    
       // --- AUTO-CREATE DATABASE TABLES ---
     let create_print_jobs = r#"
         CREATE TABLE IF NOT EXISTS print_jobs (
@@ -361,7 +362,7 @@ async fn main() {
     println!("Database tables verified/created successfully!");
     // -----------------------------------
 
-    -------------------render database--------------------
+  //render database
 
     
 
