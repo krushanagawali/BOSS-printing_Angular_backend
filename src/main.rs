@@ -195,10 +195,88 @@ pub async fn reset_password(
 }
 
 
+-------------------------------------for VULTR server-----------------------------------------
+
+// // --- ULTIMATE GHOST BYPASS HANDLER ---
+// pub async fn force_download(axum::extract::Path(file_id): axum::extract::Path<String>) -> axum::response::Response {
+//     // We add the .pdf extension BACK ON secretly inside the server!
+//     let absolute_path = format!("/var/www/boss-backend/backend/uploads/{}.pdf", file_id);
+    
+//     match tokio::fs::read(&absolute_path).await {
+//         Ok(bytes) => {
+//             axum::response::Response::builder()
+//                 .status(axum::http::StatusCode::OK)
+//                 .header(axum::http::header::CONTENT_TYPE, "application/pdf")
+//                 .body(axum::body::Body::from(bytes))
+//                 .unwrap()
+//         }
+//         Err(e) => {
+//             axum::response::Response::builder()
+//                 .status(axum::http::StatusCode::NOT_FOUND)
+//                 .body(axum::body::Body::from(format!("LINUX ERROR: {}", e)))
+//                 .unwrap()
+//         }
+//     }
+// }
+
+// // ==========================================
+// // MAIN APP ROUTER
+// // ==========================================
+// #[tokio::main]
+// async fn main() {
+//     dotenv().ok();
+
+//     let database_url = env::var("DATABASE_URL")
+//         .expect("DATABASE_URL missing");
+
+//     let pool = PgPool::connect(&database_url)
+//         .await
+//         .expect("DB connection failed");
+
+//     println!("Database connected successfully");
+
+//     fs::create_dir_all("uploads").await.unwrap();
+
+//     let cors = CorsLayer::new()
+//         .allow_origin(Any)
+//         .allow_methods([Method::GET, Method::POST, Method::OPTIONS]) 
+//         .allow_headers([CONTENT_TYPE],Any);
+
+//     let app = Router::new()
+//         .merge(routes::create_routes())
+//         .route("/api/register", post(register_user))
+//         .route("/api/login", post(login_user))
+//         .route("/api/profile", post(get_profile))
+//         .route("/api/reset-password", post(reset_password)) 
+        
+// .route("/api/force-download/:file_id", axum::routing::get(force_download))
+//         // --- BULLETPROOF FIX: We tell it EXACTLY where the files live on the Linux hard drive ---
+//         .nest_service("/uploads", get_service(ServeDir::new("/var/www/boss-backend/backend/uploads")).handle_error(|_err| async move {
+//             (StatusCode::INTERNAL_SERVER_ERROR, "Failed to serve file")
+//         }))
+//         .nest_service("/api/uploads", get_service(ServeDir::new("/var/www/boss-backend/backend/uploads")).handle_error(|_err| async move {
+//             (StatusCode::INTERNAL_SERVER_ERROR, "Failed to serve file")
+//         }))
+//         // ----------------------------------------------------------------------------------------
+
+//         .layer(DefaultBodyLimit::max(50 * 1024 * 1024))
+//         .layer(cors)
+//         .with_state(pool);
+
+//     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
+//         .await
+//         .unwrap();
+
+//     println!("Server running on http://bharatonlinesafetyservices.com (accessible via https://bharatonlinesafetyservices.com)");
+
+//     axum::serve(listener, app).await.unwrap();
+// }
+-------------------------------------for VULTR server-----------------------------------------
+
 // --- ULTIMATE GHOST BYPASS HANDLER ---
 pub async fn force_download(axum::extract::Path(file_id): axum::extract::Path<String>) -> axum::response::Response {
-    // We add the .pdf extension BACK ON secretly inside the server!
-    let absolute_path = format!("/var/www/boss-backend/backend/uploads/{}.pdf", file_id);
+    // USE RELATIVE PATH: This works on Render, Vultr, or your local laptop
+    let absolute_path = format!("./uploads/{}.pdf", file_id);
     
     match tokio::fs::read(&absolute_path).await {
         Ok(bytes) => {
@@ -211,7 +289,7 @@ pub async fn force_download(axum::extract::Path(file_id): axum::extract::Path<St
         Err(e) => {
             axum::response::Response::builder()
                 .status(axum::http::StatusCode::NOT_FOUND)
-                .body(axum::body::Body::from(format!("LINUX ERROR: {}", e)))
+                .body(axum::body::Body::from(format!("FILE SYSTEM ERROR: {}", e)))
                 .unwrap()
         }
     }
@@ -233,39 +311,42 @@ async fn main() {
 
     println!("Database connected successfully");
 
-    fs::create_dir_all("uploads").await.unwrap();
+    // Creates a local "uploads" folder in the Render working directory
+    fs::create_dir_all("./uploads").await.unwrap();
 
+    // FIXED CORS SYNTAX
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods([Method::GET, Method::POST, Method::OPTIONS]) 
-        .allow_headers([CONTENT_TYPE],Any);
+        .allow_headers(Any); 
 
     let app = Router::new()
+        // Make sure your ACTUAL upload POST route is inside this merge!
         .merge(routes::create_routes())
+        
         .route("/api/register", post(register_user))
         .route("/api/login", post(login_user))
         .route("/api/profile", post(get_profile))
         .route("/api/reset-password", post(reset_password)) 
+        .route("/api/force-download/:file_id", axum::routing::get(force_download))
         
-.route("/api/force-download/:file_id", axum::routing::get(force_download))
-        // --- BULLETPROOF FIX: We tell it EXACTLY where the files live on the Linux hard drive ---
-        .nest_service("/uploads", get_service(ServeDir::new("/var/www/boss-backend/backend/uploads")).handle_error(|_err| async move {
+        // FIXED SERVE DIR: Changed path to relative, and changed URL to /static/uploads 
+        // to prevent it from blocking your POST /api/uploads route!
+        .nest_service("/static/uploads", get_service(ServeDir::new("./uploads")).handle_error(|_err| async move {
             (StatusCode::INTERNAL_SERVER_ERROR, "Failed to serve file")
         }))
-        .nest_service("/api/uploads", get_service(ServeDir::new("/var/www/boss-backend/backend/uploads")).handle_error(|_err| async move {
-            (StatusCode::INTERNAL_SERVER_ERROR, "Failed to serve file")
-        }))
-        // ----------------------------------------------------------------------------------------
 
         .layer(DefaultBodyLimit::max(50 * 1024 * 1024))
         .layer(cors)
         .with_state(pool);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
-        .await
-        .unwrap();
+    // DYNAMIC PORT BINDING: Required for Render to assign its own port
+    let port = env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    let addr = format!("0.0.0.0:{}", port);
+    
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
 
-    println!("Server running on http://bharatonlinesafetyservices.com (accessible via https://bharatonlinesafetyservices.com)");
+    println!("Server running on port {}", port);
 
     axum::serve(listener, app).await.unwrap();
 }
