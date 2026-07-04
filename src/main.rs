@@ -313,8 +313,8 @@ async fn main() {
 
     -------------------render database--------------------
 
-        // --- AUTO-CREATE DATABASE TABLES ---
-    let create_table_query = r#"
+      // --- AUTO-CREATE DATABASE TABLES ---
+    let create_print_jobs = r#"
         CREATE TABLE IF NOT EXISTS print_jobs (
             id SERIAL PRIMARY KEY,
             access_code VARCHAR(10) NOT NULL,
@@ -333,14 +333,18 @@ async fn main() {
             master_settings TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        
+    "#;
+
+    let create_users = r#"
         CREATE TABLE IF NOT EXISTS users (
             user_id VARCHAR(50) PRIMARY KEY,
             password_hash VARCHAR(255) NOT NULL,
             mobile_number VARCHAR(20) UNIQUE NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+    "#;
 
+    let create_shopkeepers = r#"
         CREATE TABLE IF NOT EXISTS shopkeepers (
             shopkeeper_id VARCHAR(50) PRIMARY KEY,
             password_hash VARCHAR(255) NOT NULL,
@@ -349,10 +353,10 @@ async fn main() {
         );
     "#;
 
-    sqlx::query(create_table_query)
-        .execute(&pool)
-        .await
-        .expect("Failed to create database tables");
+    // Execute them one by one to keep Postgres happy
+    sqlx::query(create_print_jobs).execute(&pool).await.expect("Failed to create print_jobs table");
+    sqlx::query(create_users).execute(&pool).await.expect("Failed to create users table");
+    sqlx::query(create_shopkeepers).execute(&pool).await.expect("Failed to create shopkeepers table");
 
     println!("Database tables verified/created successfully!");
     // -----------------------------------
