@@ -311,6 +311,56 @@ async fn main() {
 
     println!("Database connected successfully");
 
+    -------------------render database--------------------
+
+        // --- AUTO-CREATE DATABASE TABLES ---
+    let create_table_query = r#"
+        CREATE TABLE IF NOT EXISTS print_jobs (
+            id SERIAL PRIMARY KEY,
+            access_code VARCHAR(10) NOT NULL,
+            file_path TEXT NOT NULL,
+            copies INTEGER NOT NULL,
+            color BOOLEAN NOT NULL,
+            paper_size VARCHAR(50) NOT NULL,
+            orientation VARCHAR(50) NOT NULL,
+            print_sides VARCHAR(50) NOT NULL,
+            page_selection VARCHAR(50) NOT NULL,
+            custom_page_range TEXT,
+            print_quality VARCHAR(50) NOT NULL,
+            scaling VARCHAR(50) NOT NULL,
+            status VARCHAR(50) NOT NULL DEFAULT 'pending',
+            expires_at TIMESTAMP NOT NULL,
+            master_settings TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        CREATE TABLE IF NOT EXISTS users (
+            user_id VARCHAR(50) PRIMARY KEY,
+            password_hash VARCHAR(255) NOT NULL,
+            mobile_number VARCHAR(20) UNIQUE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS shopkeepers (
+            shopkeeper_id VARCHAR(50) PRIMARY KEY,
+            password_hash VARCHAR(255) NOT NULL,
+            mobile_number VARCHAR(20) UNIQUE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    "#;
+
+    sqlx::query(create_table_query)
+        .execute(&pool)
+        .await
+        .expect("Failed to create database tables");
+
+    println!("Database tables verified/created successfully!");
+    // -----------------------------------
+
+    -------------------render database--------------------
+
+    
+
     // Creates a local "uploads" folder in the Render working directory
     fs::create_dir_all("./uploads").await.unwrap();
 
